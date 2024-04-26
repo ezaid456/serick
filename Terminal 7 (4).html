@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Command Prompt</title>
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            background-color: black;
+            color: green;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        #terminal {
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        #input {
+            width: calc(100% - 20px);
+            background: none;
+            border: none;
+            color: green;
+            font-size: 16px;
+            outline: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        #output {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="terminal">
+        <p id="output">Remote Access Login? Y/N</p>
+        <input type="text" id="input" autofocus onkeydown="handleInput(event)">
+    </div>
+    <audio id="typing-sound"
+        src="https://cms-artifacts.motionarray.com/content/motion-array/765581/Digital_Text_mp3_1710867169.mp3?Expires=2026227321707&Key-Pair-Id=K2ZDLYDZI2R1DF&Signature=jWNCVrRCLxnaUwfAbWH3yWVbEh0fyPH3zm-1fVKq4qbSh2HO6j5N9rGw3zUK91SkZCL~Hv2B~XsclQQIfwAjVZUTtp~TmH0ZaNWzkS0ZzV3QLtvYBAl3sE9pfojBjUKLykMGdsKrgoZlFwjgRhMYhji4USRhU8ZEuE6-1lm-hgyMFgzCoVjV5-i6PsXqeoAO7LApc-pgczh0TYbb~xjtUVujDyK97rGydQ39OQkTZVcqHR2HjapA0z6ZbXFRgV0WXZuRMEVDPLy~Mo0hwQcgGYlJiejGv6vMCvgI0CXBCGhLJCsSWQzLMPK0eqMJ~NdbHqfCuA4IQ7Ec4ZSdidW5YQ__"
+        loop preload="auto"></audio>
+    <script>
+        let transmissionStarted = false;
+        let lastCommand = ''; // Initialize lastCommand variable
+        const initialText = `
+====================================================================
+                *** SECURE SYSTEM ACCESS: TERMINAL 7 ***
+====================================================================
+[LOGIN SUCCESSFUL]
+
+OPERATOR ID: XJ47-RP9
+>> WELCOME TO TERMINAL 7
+>> STATUS: ACTIVE - READY FOR COMMAND INPUT
+>> LOCATION: REMOTE ACCESS
+
+====================================================================
+[AVAILABLE COMMANDS]
+>> LOG_LIST: Access transmission log list
+>> LOG: Access transmission log
+>> KEY: Request key
+>> DECRYPT: Decrypt cyphertext
+
+[USER TIP]
+>> Use the HELP command for information on specific commands.
+>> Commands must use underscores (_) in place of spaces
+
+====================================================================
+>>> AWAITING INPUT <<<
+====================================================================
+`;
+        const accessDenied = `
+ACCESS DENIED
+`;
+        const norwegianSkinwalkerTransmission = `
+==========================================================================
+                *** INCOMING TRANSMISSION RECEIVED ***
+==========================================================================
+
+>> SOURCE: EXTERNAL DATA NODE - SECTOR 7
+>> TRANSMISSION TYPE: ENCRYPTED NUMERIC DATA
+>> PRIORITY: HIGH
+
+==========================================================================
+[TRANSMISSION CONTENT]
+
+054 044 035 013 030 060 026 083 063 034 017 043 002 048 007 048 082 041 
+
+001 039 039 048 083 018 011 052 119 026 013 002 063 025 033 026 007 029 
+
+033 114 003 046 041 053 059 089 116 025 034 063 083 031 028 055 032 026 
+
+060 029 117 023 060 003 055 060 032 033 067 113 022 035 025 030 068 042 
+
+031 054 058 114 051 076 032 040 006 056 027 010 009 043 017 105 025 040 
+
+113 053 033 002 023 006 037 040 105 088 000 059 039 032 098 058 008 049 
+
+039 038 065 020 111 020 017 036 054 005 062 098 115 023 026 050 020 019 
+
+011 043 043 107 070 018 043 067 042 003 036 007 014 081 005 032 015 065 
+
+047 043 056 059 046 052 011 123 088 042 002 043 005 032 054 062 117 032 
+
+028 059 009 042 004 019 037 078 059 032 078 029 061 014 012 043 008 033 
+
+037 097 055 032 120 033 062 013 067 041 035 058 032 037 004 036 058 003 
+
+067 029 005 050 043 018 034 015 118 101 115
+[TRANSMISSION COMPLETE]
+==========================================================================
+
+>> KEY ID: NORWSKI10890053
+
+==========================================================================
+                    >>> END OF TRANSMISSION LOG <<<
+==========================================================================
+
+`;
+        const norwegianSkinwalkerKey = `
+==========================================================================
+[ACCESS REQUEST INITIATED]
+
+>> REQUESTING ACCESS TO: AXIOM 3305
+>> REQUEST LEVEL: CLASSIFIED - ALPHA 1 CLEARANCE REQUIRED
+>> PURPOSE OF ACCESS: ACTIVATION OF PROTOCOL “NORWEGIAN SKINWALKER”
+
+[VALIDATING CREDENTIALS...]
+[CREDENTIALS AUTHORIZED - ACCESS GRANTED]
+
+==========================================================================
+[SECURITY LOG ENTRIES]
+>> LOG 43876: INITIATE SEQUENCE STARTED BY OPERATOR XJ47-RP9
+>> LOG 43877: CREDENTIALS SUBMITTED FOR AUTHORIZATION
+>> LOG 43878: ACCESS APPROVED FOR OPERATOR XJ47-RP9
+
+==========================================================================
+[ENCRYPTION KEY RECEIVED]
+
+wALcy OnsKM fNpYi WrYdF LCsse PWmek LiDhn sFRsG GPHuT vWMsu sBRtY dUbRe 
+
+XPDRm QSBzv dYkSJ RRlTM uL zg lEeIm GQVNw egBME xeZD HBLaB SGauO ftSWw 
+
+ZLSCu UqgcN YGfeN cHqEq kqqHj aZESU ACeW xLmYb IXYUM yVfXm vVnZS nxSjy 
+
+YaOBA VSXUV hcDLO NQeMT pcimW FaGc
+==========================================================================
+                        >>> END OF REQUEST <<<
+==========================================================================
+`;
+const norwegianSkinwalkerMessage = `
+====================================================================
+                *** DECRYPTION COMPLETION REPORT ***
+====================================================================
+[DECRYPTION SUCCESSFUL]
+
+>> DECRYPTION KEY: [REDACTED FOR SECURITY]
+>> METHOD USED: AES-256
+
+[DECRYPTED MESSAGE]
+"Amongst towering peaks and whispering pines, our journey unfolds. Each step a testament to courage,
+each vista a reward. Together, we brave the unknown, forging memories as enduring as the mountains themselves"
+
+====================================================================
+[SECURITY NOTICE]
+>> WARNING: This decrypted message is classified information.
+>> Ensure proper handling and disposal of decryption logs.
+
+====================================================================
+>>> END OF REPORT <<<
+====================================================================
+`;
+        function typeText(text, index, audio) {
+            if (index < text.length) {
+                document.getElementById('output').textContent += text.charAt(index);
+                setTimeout(function () {
+                    typeText(text, index + 1, audio);
+                }, 1); // Adjust typing speed
+            } else {
+                // Show input after the message is fully displayed
+                document.getElementById('input').style.display = 'inline-block';
+                document.getElementById('input').focus();
+                audio.pause(); // Stop the audio when typing is done
+                audio.currentTime = 0; // Reset audio to the start
+            }
+        }
+
+        function startTransmission(text) {
+            const audio = document.getElementById('typing-sound');
+            audio.play().then(() => {
+                typeText(text, 0, audio);
+            });
+        }
+
+        function handleInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const inputElement = document.getElementById('input');
+                const outputElement = document.getElementById('output');
+                const rawCommand = inputElement.value.trim();  // Trim whitespace
+                const command = rawCommand.replace(/\s+/g, '').toLowerCase();  // Remove spaces and convert to lower case
+                inputElement.value = '';  // Clear input field
+
+
+                if (!transmissionStarted) {
+                    if (command === 'y' || command === 'yes') {
+                        transmissionStarted = true;
+                        output.textContent = 'terminal 7:\\agents\\XJ47-RP9>';
+                        startTransmission(initialText);
+                    } else {
+                        output.textContent += '\nLINK NOT ESTABLISHED: Type Y or yes to login.';
+                    }
+                } else {
+                    output.innerHTML += '\nterminal 7:\\agents\\XJ47-RP9>' + command;
+                    switch (command) {
+                        case 'help':
+                            output.innerHTML += '\nAvailable commands: help, clear, whoami, log, log_list, decrypt, key';
+                            break;
+                        case 'clear':
+                            output.innerHTML = 'terminal 7:\\agents\\XJ47-RP9>'; // Clear the screen
+                            break;
+                        case 'whoami':
+                            output.innerHTML += '\nXJ47-RP9';
+                            break;
+                        case 'log_list':
+                            output.innerHTML += '\nnorwegian_skinwalker, alibi, blackfoot, [REDACTED], [REDACTED], corsair';
+                            break;
+                        case 'log':
+                            output.innerHTML += '\nInsert Transmission Log Reference Name';
+                            lastCommand = 'log';
+                            break;
+                        case 'key':
+                            output.innerHTML += '\nInsert Key ID';
+                            lastCommand = 'key';
+                            break;
+                        case 'norwski10890053':
+                            if (lastCommand === 'key') {
+                                // Call startTransmission with different text
+                                startTransmission(norwegianSkinwalkerKey);
+                                lastCommand = 'norwski10890053';
+                            } else {
+                                output.innerHTML += '\nError: Try KEY';
+                            }
+                            break;
+                        case 'decrypt':
+                            if (lastCommand === 'norwski10890053') {
+                                output.innerHTML += '\nInsert ENCRYPTED NUMERIC DATA';
+                                lastCommand = 'decrypt';
+                            } else {
+                                output.innerHTML += '\nError: Load Key Before Decrypting';
+                            }
+                            break;
+                        case '054044035013030060026083063034017043002048007048082041001039039048083018011052119026013002063025033026007029033114003046041053059089116025034063083031028055032026060029117023060003055060032033067113022035025030068042031054058114051076032040006056027010009043017105025040113053033002023006037040105088000059039032098058008049039038065020111020017036054005062098115023026050020019011043043107070018043067042003036007014081005032015065047043056059046052011123088042002043005032054062117032028059009042004019037078059032078029061014012043008033037097055032120033062013067041035058032037004036058003067029005050043018034015118101115':
+                            if (lastCommand === 'decrypt') {
+                                // Call startTransmission with different text
+                                startTransmission(norwegianSkinwalkerMessage);
+                                lastCommand = '';
+                            } else {
+                                output.innerHTML += '\nError: Try decrypt';
+                            }
+                            break;
+                        case 'norwegian_skinwalker':
+                            if (lastCommand === 'log') {
+                                // Call startTransmission with different text
+                                startTransmission(norwegianSkinwalkerTransmission);
+                                lastCommand = 'norwegian_skinwalker';
+                            } else {
+                                output.innerHTML += '\nError: Try LOG';
+                            }
+                            break;
+                        case 'alibi':
+                            if (lastCommand === 'log') {
+                                // Call startTransmission with different text
+                                startTransmission(accessDenied);
+                                lastCommand = 'alibi';
+                            } else {
+                                output.innerHTML += '\nError: Try LOG';
+                            }
+                            break;
+                        case 'blackfoot':
+                            if (lastCommand === 'log') {
+                                // Call startTransmission with different text
+                                startTransmission(accessDenied);
+                                lastCommand = 'blackfoot';
+                            } else {
+                                output.innerHTML += '\nError: Try LOG';
+                            }
+                            break;
+                        case 'corsair':
+                            if (lastCommand === 'log') {
+                                // Call startTransmission with different text
+                                startTransmission(accessDenied);
+                                lastCommand = 'corsair';
+                            } else {
+                                output.innerHTML += '\nError: Try LOG';
+                            }
+                            break;
+                        case 'cancel':
+                            output.innerHTML += '\ncanceled';
+                            lastCommand = '';
+                            break;
+                        default:
+                            output.innerHTML += '\n' + command + ' is not recognized as an internal or external command. Try "help".';
+                            break;
+                    }
+                    output.scrollTop = output.scrollHeight; // Auto-scroll to the bottom of the output
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
