@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Configuration Tool</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        h1 { text-align: center; color: #333; }
+        .container { display: flex; width: 90%; margin: 20px auto; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .command-section, .json-output { flex: 1; padding: 10px; }
+        .command-block { margin-bottom: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background-color: #fff; }
+        .nested { margin-left: 20px; border-left: 3px solid #007BFF; padding-left: 20px; }
+        label { display: block; margin-bottom: 10px; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007BFF; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 5px; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f0f0f0; padding: 10px; border-radius: 5px; overflow: auto; height: auto; }
+        .fa { margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="json-output">
+            <h2>JSON Output</h2>
+            <pre id="output"></pre>
+        </div>
+        <div class="command-section">
+            <h1>Command Configuration Tool</h1>
+            <button onclick="generateJSON()"><i class="fa fa-code"></i>Generate JSON</button>
+            <div id="commandsContainer"></div>
+            
+        </div>
+    </div>
+
+    <script>
+        let commandIndex = 0;
+
+        function addCommand(parentId = null) {
+            const container = parentId ? document.querySelector(`#${parentId} .nested`) : document.getElementById("commandsContainer");
+            const newCommandId = `command-${commandIndex++}`;
+            const commandBlock = document.createElement('div');
+            commandBlock.className = 'command-block';
+            commandBlock.id = newCommandId;
+            commandBlock.innerHTML = `
+                <label>Command Name: <input type="text" class="command-name"></label>
+                <label>Action Type:
+                    <select class="action-type" onchange="toggleActionDetails('${newCommandId}')">
+                        <option value="function">Function</option>
+                        <option value="response">Response</option>
+                    </select>
+                </label>
+                <div class="action-details">
+                    <label>Function Name: <input type="text" class="function-name"></label>
+                    <label>Arguments: <input type="text" class="function-args" placeholder="Comma-separated values"></label>
+                </div>
+                <div class="response-text" style="display: none;">
+                    <label>Response Text: <textarea class="response"></textarea></label>
+                </div>
+                <div class="nested"></div>
+            `;
+
+            if (parentId) { // Only add buttons to non-initial commands
+                commandBlock.innerHTML += `
+                    <button onclick="addCommand('${newCommandId}')"><i class="fa fa-plus"></i>Add Follow-Up Command</button>
+                    <button onclick="removeCommand('${newCommandId}')"><i class="fa fa-trash"></i>Remove This Command</button>
+                `;
+            } else { // For initial command, only add follow-up button
+                commandBlock.innerHTML += `
+                    <button onclick="addCommand('${newCommandId}')"><i class="fa fa-plus"></i>Add Follow-Up Command</button>
+                `;
+            }
+
+            container.appendChild(commandBlock);
+        }
+
+        function removeCommand(commandId) {
+            const commandBlock = document.getElementById(commandId);
+            commandBlock.parentNode.removeChild(commandBlock);
+        }
+
+        function toggleActionDetails(commandId) {
+            const commandBlock = document.getElementById(commandId);
+            const actionType = commandBlock.querySelector(".action-type").value;
+            const actionDetails = commandBlock.querySelector(".action-details");
+            const response = commandBlock.querySelector(".response-text");
+
+            if (actionType === "function") {
+                actionDetails.style.display = '';
+                response.style.display = 'none';
+            } else {
+                actionDetails.style.display = 'none';
+                response.style.display = '';
+            }
+        }
+
+        function generateJSON() {
+            const output = document.getElementById("output");
+            const commands = document.getElementById("commandsContainer");
+            output.textContent = JSON.stringify(buildCommandObject(commands), null, 2);
+        }
+
+        function buildCommandObject(container) {
+            const commands = {};
+            container.querySelectorAll(':scope > .command-block').forEach(block => {
+                const name = block.querySelector('.command-name').value;
+                const actionType = block.querySelector('.action-type').value;
+                const followUps = block.querySelector('.nested');
+
+                let commandDetails = {};
+
+                if (actionType === 'function') {
+                    const functionName = block.querySelector('.function-name').value;
+                    const args = block.querySelector('.function-args').value.split(',').map(arg => arg.trim());
+                    commandDetails = {
+                        action: functionName,
+                        actionArgs: args
+                    };
+                } else {
+                    const response = block.querySelector('.response').value;
+                    commandDetails = { response: response };
+                }
+
+                if (followUps.children.length > 0) {
+                    commandDetails.followUps = buildCommandObject(followUps);
+                }
+                commands[name] = commandDetails;
+            });
+            return commands;
+        }
+
+        // Initialize with one initial command input that cannot be removed
+        addCommand();
+    </script>
+</body>
+</html>
